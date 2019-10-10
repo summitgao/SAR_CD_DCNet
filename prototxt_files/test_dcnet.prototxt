@@ -1,0 +1,769 @@
+name: "DCNet"
+
+## Data Layer
+layer {name: "ice1" type: "Data" top: "data" top: "label"
+include {phase: TRAIN}
+transform_param {mirror: true}
+data_param {source: "./examples/DCNet/data/farmland/train_lmdb" batch_size: 40 backend: LMDB}}
+
+
+layer {name: "ice1" type: "Data" top: "data" top: "label"
+include {phase: TEST}
+transform_param {mirror: true}
+data_param{source: "examples/DCNet/data/farmland/test_lmdb" batch_size: 32 backend: LMDB}}
+
+## Low-level Feature Extraction Layer
+
+layer {name: "Convolution1" type: "Convolution" bottom: "data" top: "Convolution1"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 weight_filler {type: "gaussian" std: 0.118} bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm1" type: "BatchNorm" bottom: "Convolution1" top: "Convolution1"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale1" type: "Scale" bottom: "Convolution1" top: "Convolution1"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU1" type: "ReLU" bottom: "Convolution1" top: "Convolution1"}
+
+
+layer {name: "Convolution2" type: "Convolution" bottom: "Convolution1" top: "Convolution2"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 weight_filler {type: "gaussian" std: 0.118} bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm2" type: "BatchNorm" bottom: "Convolution2" top: "Convolution2"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale2" type: "Scale" bottom: "Convolution2" top: "Convolution2"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU2" type: "ReLU" bottom: "Convolution2" top: "Convolution2"}
+
+layer {name: "Convolution3" type: "Convolution" bottom: "Convolution2" top: "Convolution3"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 weight_filler {type: "gaussian" std: 0.118} bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm3" type: "BatchNorm" bottom: "Convolution3" top: "Convolution3"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale3" type: "Scale" bottom: "Convolution3" top: "Convolution3"
+scale_param {bias_term: true}}
+
+
+layer {name: "global_1_1" type: "Pooling" bottom: "Convolution3" top: "global_1_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv1_1" type: "Convolution" bottom: "global_1_1" top: "conv1_1" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+
+layer {name: "global_1_2" type: "Pooling" bottom: "Convolution3" top: "global_1_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv1_2" type: "Convolution" bottom: "global_1_2" top: "conv1_2" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise1" type: "Eltwise" bottom: "conv1_1" bottom: "conv1_2" top: "elt1" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv1" type: "ReLU" bottom: "elt1" top: "elt1"}
+
+layer {name: "conv1_up" type: "Convolution" bottom: "elt1" top: "conv1_up" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "conv1_prob" type: "Sigmoid" bottom: "conv1_up" top: "conv1_up"}
+
+layer {name: "conv1_axpy" type: "Axpy" bottom: "conv1_up" bottom: "Convolution3" bottom: "Convolution1" top: "Eltwise1"}
+
+layer {name: "ReLU3" type: "ReLU" bottom: "Eltwise1" top: "Eltwise1"}
+
+
+layer {name: "Convolution4" type: "Convolution" bottom: "Eltwise1" top: "Convolution4"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 weight_filler {type: "gaussian" std: 0.118} bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm4" type: "BatchNorm" bottom: "Convolution4" top: "Convolution4"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale4" type: "Scale" bottom: "Convolution4" top: "Convolution4"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU4" type: "ReLU" bottom: "Convolution4" top: "Convolution4"}
+
+layer {name: "Convolution5" type: "Convolution" bottom: "Convolution4" top: "Convolution5"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 weight_filler {type: "gaussian" std: 0.118} bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm5" type: "BatchNorm" bottom: "Convolution5" top: "Convolution5"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale5" type: "Scale" bottom: "Convolution5" top: "Convolution5"
+scale_param {bias_term: true}}
+
+layer {name: "global_2_1" type: "Pooling" bottom: "Convolution5" top: "global_2_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv2_1" type: "Convolution" bottom: "global_2_1" top: "conv2_1" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "global_2_2" type: "Pooling" bottom: "Convolution5" top: "global_2_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv2_2" type: "Convolution" bottom: "global_2_2" top: "conv2_2" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise2" type: "Eltwise" bottom: "conv2_1" bottom: "conv2_2" top: "elt2" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv2" type: "ReLU" bottom: "elt2" top: "elt2"}
+
+layer {name: "conv2_up" type: "Convolution" bottom: "elt2" top: "conv2_up" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "conv2_prob" type: "Sigmoid" bottom: "conv2_up" top: "conv2_up"}
+
+layer {name: "conv2_axpy" type: "Axpy" bottom: "conv2_up" bottom: "Convolution5" bottom: "Eltwise1" top: "Eltwise2"}
+
+layer {name: "ReLU5" type: "ReLU" bottom: "Eltwise2" top: "Eltwise2"}
+
+
+layer {name: "Convolution6" type: "Convolution" bottom: "Eltwise2" top: "Convolution6"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.118} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm6" type: "BatchNorm" bottom: "Convolution6" top: "Convolution6"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale6" type: "Scale" bottom: "Convolution6" top: "Convolution6"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU6" type: "ReLU" bottom: "Convolution6" top: "Convolution6"}
+
+layer {name: "Convolution7" type: "Convolution" bottom: "Convolution6" top: "Convolution7"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.118} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm7" type: "BatchNorm" bottom: "Convolution7" top: "Convolution7"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale7" type: "Scale" bottom: "Convolution7" top: "Convolution7"
+scale_param {bias_term: true}}
+
+layer {name: "global_3_1" type: "Pooling" bottom: "Convolution7" top: "global_3_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv3_1" type: "Convolution" bottom: "global_3_1" top: "conv3_1" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "globa3_2" type: "Pooling" bottom: "Convolution7" top: "global_3_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv3_2" type: "Convolution" bottom: "global_3_2" top: "conv3_2" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise3" type: "Eltwise" bottom: "conv3_1" bottom: "conv3_2" top: "elt3" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv3" type: "ReLU" bottom: "elt3" top: "elt3"}
+
+layer {name: "conv3_up" type: "Convolution" bottom: "elt3" top: "conv3_up" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "conv3_prob" type: "Sigmoid" bottom: "conv3_up" top: "conv3_up"}
+
+layer {name: "conv3_axpy" type: "Axpy" bottom: "conv3_up" bottom: "Convolution7" bottom: "Eltwise2" top: "Eltwise3"}
+
+layer {name: "ReLU7" type: "ReLU" bottom: "Eltwise3" top: "Eltwise3"}
+
+
+layer {name: "Convolution8" type: "Convolution" bottom: "Eltwise3" top: "Convolution8"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.118} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm8" type: "BatchNorm" bottom: "Convolution8" top: "Convolution8"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale8" type: "Scale" bottom: "Convolution8" top: "Convolution8"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU8" type: "ReLU" bottom: "Convolution8" top: "Convolution8"}
+
+layer {name: "Convolution9" type: "Convolution" bottom: "Convolution8" top: "Convolution9"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 16 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.118} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm9" type: "BatchNorm" bottom: "Convolution9" top: "Convolution9"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale9" type: "Scale" bottom: "Convolution9" top: "Convolution9"
+scale_param {bias_term: true}}
+
+layer {name: "global_4_1" type: "Pooling" bottom: "Convolution9" top: "global_4_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv4_1" type: "Convolution" bottom: "global_4_1" top: "conv4_1" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "globa4_2" type: "Pooling" bottom: "Convolution9" top: "global_4_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv4_2" type: "Convolution" bottom: "global_4_2" top: "conv4_2" 
+convolution_param {num_output: 4 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise4" type: "Eltwise" bottom: "conv4_1" bottom: "conv4_2" top: "elt4" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv4" type: "ReLU" bottom: "elt4" top: "elt4"}
+
+layer {name: "conv4_up" type: "Convolution" bottom: "elt4" top: "conv4_up" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "conv4_prob" type: "Sigmoid" bottom: "conv4_up" top: "conv4_up"}
+
+layer {name: "conv4_axpy" type: "Axpy" bottom: "conv4_up" bottom: "Convolution9" bottom: "Eltwise3" top: "Eltwise4"}
+
+layer {name: "ReLU9" type: "ReLU" bottom: "Eltwise4" top: "Eltwise4"}
+
+
+layer {name: "Convolution10" type: "Convolution" bottom: "Eltwise4" top: "Convolution10" 
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 0 kernel_size: 1 stride: 2
+weight_filler {type: "gaussian" std: 0.25}
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm10" type: "BatchNorm" bottom: "Convolution10" top: "Convolution10"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale10" type: "Scale" bottom: "Convolution10" top: "Convolution10"
+scale_param {bias_term: true}}
+
+## Mid-level Feature Extraction Layer
+
+layer {name: "Convolution11" type: "Convolution" bottom: "Eltwise4" top: "Convolution11"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 2 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm11" type: "BatchNorm" bottom: "Convolution11" top: "Convolution11"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale11" type: "Scale" bottom: "Convolution11" top: "Convolution11"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU11" type: "ReLU" bottom: "Convolution11" top: "Convolution11"}
+
+layer {name: "Convolution12" type: "Convolution" bottom: "Convolution11" top: "Convolution12"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm12" type: "BatchNorm" bottom: "Convolution12" top: "Convolution12"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale12" type: "Scale" bottom: "Convolution12" top: "Convolution12"
+scale_param {bias_term: true}}
+
+layer {name: "global_5_1" type: "Pooling" bottom: "Convolution12" top: "global_5_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv5_1" type: "Convolution" bottom: "global_5_1" top: "conv5_1" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "globa5_2" type: "Pooling" bottom: "Convolution12" top: "global_5_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv5_2" type: "Convolution" bottom: "global_5_2" top: "conv5_2" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise5" type: "Eltwise" bottom: "conv5_1" bottom: "conv5_2" top: "elt5" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv5" type: "ReLU" bottom: "elt5" top: "elt5"}
+
+layer {name: "conv5_up" type: "Convolution" bottom: "elt5" top: "conv5_up" 
+convolution_param {num_output: 32 kernel_size: 1 stride: 1}}
+
+layer {name: "conv5_prob" type: "Sigmoid" bottom: "conv5_up" top: "conv5_up"}
+
+layer {name: "conv5_axpy" type: "Axpy" bottom: "conv5_up" bottom: "Convolution12" bottom: "Convolution10" top: "Eltwise5"}
+
+layer {name: "ReLU12" type: "ReLU" bottom: "Eltwise5" top: "Eltwise5"}
+
+
+layer {name: "Convolution13" type: "Convolution" bottom: "Eltwise5" top: "Convolution13"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm13" type: "BatchNorm" bottom: "Convolution13" top: "Convolution13"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale13" type: "Scale" bottom: "Convolution13" top: "Convolution13"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU13" type: "ReLU" bottom: "Convolution13" top: "Convolution13"}
+
+layer {name: "Convolution14" type: "Convolution" bottom: "Convolution13" top: "Convolution14"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm14" type: "BatchNorm" bottom: "Convolution14" top: "Convolution14"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale14" type: "Scale" bottom: "Convolution14" top: "Convolution14"
+scale_param {bias_term: true}}
+
+layer {name: "global_6_1" type: "Pooling" bottom: "Convolution14" top: "global_6_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv6_1" type: "Convolution" bottom: "global_6_1" top: "conv6_1" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "globa6_2" type: "Pooling" bottom: "Convolution14" top: "global_6_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv6_2" type: "Convolution" bottom: "global_6_2" top: "conv6_2" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise6" type: "Eltwise" bottom: "conv6_1" bottom: "conv6_2" top: "elt6" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv6" type: "ReLU" bottom: "elt6" top: "elt6"}
+
+layer {name: "conv6_up" type: "Convolution" bottom: "elt6" top: "conv6_up" 
+convolution_param {num_output: 32 kernel_size: 1 stride: 1}}
+
+layer {name: "conv6_prob" type: "Sigmoid" bottom: "conv6_up" top: "conv6_up"}
+
+layer {name: "conv6_axpy" type: "Axpy" bottom: "conv6_up" bottom: "Convolution14" bottom: "Eltwise5" top: "Eltwise6"}
+
+layer {name: "ReLU14" type: "ReLU" bottom: "Eltwise6" top: "Eltwise6"}
+
+
+layer {name: "Convolution15" type: "Convolution" bottom: "Eltwise6" top: "Convolution15"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm15" type: "BatchNorm" bottom: "Convolution15" top: "Convolution15"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale15" type: "Scale" bottom: "Convolution15" top: "Convolution15"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU15" type: "ReLU" bottom: "Convolution15" top: "Convolution15"}
+
+layer {name: "Convolution16" type: "Convolution" bottom: "Convolution15" top: "Convolution16"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm16" type: "BatchNorm" bottom: "Convolution16" top: "Convolution16"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale16" type: "Scale" bottom: "Convolution16" top: "Convolution16"
+scale_param {bias_term: true}}
+
+layer {name: "global_7_1" type: "Pooling" bottom: "Convolution16" top: "global_7_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv7_1" type: "Convolution" bottom: "global_7_1" top: "conv7_1" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "globa7_2" type: "Pooling" bottom: "Convolution16" top: "global_7_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv7_2" type: "Convolution" bottom: "global_7_2" top: "conv7_2" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise7" type: "Eltwise" bottom: "conv7_1" bottom: "conv7_2" top: "elt7" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv7" type: "ReLU" bottom: "elt7" top: "elt7"}
+
+layer {name: "conv7_up" type: "Convolution" bottom: "elt7" top: "conv7_up" 
+convolution_param {num_output: 32 kernel_size: 1 stride: 1}}
+
+layer {name: "conv7_prob" type: "Sigmoid" bottom: "conv7_up" top: "conv7_up"}
+
+layer {name: "conv7_axpy" type: "Axpy" bottom: "conv7_up" bottom: "Convolution16" bottom: "Eltwise6" top: "Eltwise7"}
+
+layer {name: "ReLU16" type: "ReLU" bottom: "Eltwise7" top: "Eltwise7"}
+
+
+layer {name: "Convolution17" type: "Convolution" bottom: "Eltwise7" top: "Convolution17"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm17" type: "BatchNorm" bottom: "Convolution17" top: "Convolution17"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale17" type: "Scale" bottom: "Convolution17" top: "Convolution17"
+scale_param {bias_term: true}}
+
+layer {name: "ReLU17" type: "ReLU" bottom: "Convolution17" top: "Convolution17"}
+
+layer {name: "Convolution18" type: "Convolution" bottom: "Convolution17" top: "Convolution18"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 32 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.083} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm18" type: "BatchNorm" bottom: "Convolution18" top: "Convolution18"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale18" type: "Scale" bottom: "Convolution18" top: "Convolution18"
+scale_param {bias_term: true}}
+
+layer {name: "global_8_1" type: "Pooling" bottom: "Convolution18" top: "global_8_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv8_1" type: "Convolution" bottom: "global_8_1" top: "conv8_1" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "globa8_2" type: "Pooling" bottom: "Convolution18" top: "global_8_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv8_2" type: "Convolution" bottom: "global_8_2" top: "conv8_2" 
+convolution_param {num_output: 8 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise8" type: "Eltwise" bottom: "conv8_1" bottom: "conv8_2" top: "elt8" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv8" type: "ReLU" bottom: "elt8" top: "elt8"}
+
+layer {name: "conv8_up" type: "Convolution" bottom: "elt8" top: "conv8_up" 
+convolution_param {num_output: 32 kernel_size: 1 stride: 1}}
+
+layer {name: "conv8_prob" type: "Sigmoid" bottom: "conv8_up" top: "conv8_up"}
+
+layer {name: "conv8_axpy" type: "Axpy" bottom: "conv8_up" bottom: "Convolution18" bottom: "Eltwise7" top: "Eltwise8"}
+
+layer {name: "ReLU18" type: "ReLU" bottom: "Eltwise8" top: "Eltwise8"}
+
+
+layer {name: "Convolution19" type: "Convolution" bottom: "Eltwise8" top: "Convolution19"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 0 kernel_size: 1 stride: 2
+weight_filler {type: "gaussian" std: 0.176776695297}
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm19" type: "BatchNorm" bottom: "Convolution19" top: "Convolution19"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale19" type: "Scale" bottom: "Convolution19" top: "Convolution19"
+scale_param {bias_term: true}}
+
+## High-level Feature Extraction Layer
+
+layer {name: "Convolution20" type: "Convolution" bottom: "Eltwise8" top: "Convolution20"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 2 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm20" type: "BatchNorm" bottom: "Convolution20" top: "Convolution20"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale20" type: "Scale" bottom: "Convolution20" top: "Convolution20" 
+scale_param {bias_term: true}}
+
+layer {name: "ReLU20" type: "ReLU" bottom: "Convolution20" top: "Convolution20"}
+
+layer {name: "Convolution21" type: "Convolution" bottom: "Convolution20" top: "Convolution21"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm21" type: "BatchNorm" bottom: "Convolution21" top: "Convolution21"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale21" type: "Scale" bottom: "Convolution21" top: "Convolution21"
+scale_param {bias_term: true}}
+
+layer {name: "global_9_1" type: "Pooling" bottom: "Convolution21" top: "global_9_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv9_1" type: "Convolution" bottom: "global_9_1" top: "conv9_1" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "globa9_2" type: "Pooling" bottom: "Convolution21" top: "global_9_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv9_2" type: "Convolution" bottom: "global_9_2" top: "conv9_2" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise9" type: "Eltwise" bottom: "conv9_1" bottom: "conv9_2" top: "elt9" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv9" type: "ReLU" bottom: "elt9" top: "elt9"}
+
+layer {name: "conv9_up" type: "Convolution" bottom: "elt9" top: "conv9_up" 
+convolution_param {num_output: 64 kernel_size: 1 stride: 1}}
+
+layer {name: "conv9_prob" type: "Sigmoid" bottom: "conv9_up" top: "conv9_up"}
+
+layer {name: "conv9_axpy" type: "Axpy" bottom: "conv9_up" bottom: "Convolution21" bottom: "Convolution19" top: "Eltwise9"}
+
+layer {name: "ReLU21" type: "ReLU" bottom: "Eltwise9" top: "Eltwise9"}
+
+
+layer {name: "Convolution22" type: "Convolution" bottom: "Eltwise9" top: "Convolution22"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm22" type: "BatchNorm" bottom: "Convolution22" top: "Convolution22"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale22" type: "Scale" bottom: "Convolution22" top: "Convolution22" 
+scale_param {bias_term: true}}
+
+layer {name: "ReLU22" type: "ReLU" bottom: "Convolution22" top: "Convolution22"}
+
+
+layer {name: "Convolution23" type: "Convolution" bottom: "Convolution22" top: "Convolution23"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm23" type: "BatchNorm" bottom: "Convolution23" top: "Convolution23"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale23" type: "Scale" bottom: "Convolution23" top: "Convolution23"
+scale_param {bias_term: true}}
+
+layer {name: "global_10_1" type: "Pooling" bottom: "Convolution23" top: "global_10_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv10_1" type: "Convolution" bottom: "global_10_1" top: "conv10_1" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "globa10_2" type: "Pooling" bottom: "Convolution23" top: "global_10_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv10_2" type: "Convolution" bottom: "global_10_2" top: "conv10_2" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise10" type: "Eltwise" bottom: "conv10_1" bottom: "conv10_2" top: "elt10" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv10" type: "ReLU" bottom: "elt10" top: "elt10"}
+
+layer {name: "conv10_up" type: "Convolution" bottom: "elt10" top: "conv10_up" 
+convolution_param {num_output: 64 kernel_size: 1 stride: 1}}
+
+layer {name: "conv10_prob" type: "Sigmoid" bottom: "conv10_up" top: "conv10_up"}
+
+layer {name: "conv10_axpy" type: "Axpy" bottom: "conv10_up" bottom: "Convolution23" bottom: "Eltwise9" top: "Eltwise10"}
+
+layer {name: "ReLU23" type: "ReLU" bottom: "Eltwise10" top: "Eltwise10"}
+
+
+layer {name: "Convolution24" type: "Convolution" bottom: "Eltwise10" top: "Convolution24"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm24" type: "BatchNorm" bottom: "Convolution24" top: "Convolution24"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale24" type: "Scale" bottom: "Convolution24" top: "Convolution24" 
+scale_param {bias_term: true}}
+
+layer {name: "ReLU24" type: "ReLU" bottom: "Convolution24" top: "Convolution24"}
+
+layer {name: "Convolution25" type: "Convolution" bottom: "Convolution24" top: "Convolution25"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm25" type: "BatchNorm" bottom: "Convolution25" top: "Convolution25"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale25" type: "Scale" bottom: "Convolution25" top: "Convolution25"
+scale_param {bias_term: true}}
+
+layer {name: "global_11_1" type: "Pooling" bottom: "Convolution25" top: "global_11_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv11_1" type: "Convolution" bottom: "global_11_1" top: "conv11_1" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "globa11_2" type: "Pooling" bottom: "Convolution25" top: "global_11_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv11_2" type: "Convolution" bottom: "global_11_2" top: "conv11_2" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise11" type: "Eltwise" bottom: "conv11_1" bottom: "conv11_2" top: "elt11" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv11" type: "ReLU" bottom: "elt11" top: "elt11"}
+
+layer {name: "conv11_up" type: "Convolution" bottom: "elt11" top: "conv11_up" 
+convolution_param {num_output: 64 kernel_size: 1 stride: 1}}
+
+layer {name: "conv11_prob" type: "Sigmoid" bottom: "conv11_up" top: "conv11_up"}
+
+layer {name: "conv11_axpy" type: "Axpy" bottom: "conv11_up" bottom: "Convolution25" bottom: "Eltwise10" top: "Eltwise11"}
+
+layer {name: "ReLU25" type: "ReLU" bottom: "Eltwise11" top: "Eltwise11"}
+
+
+layer {name: "Convolution26" type: "Convolution" bottom: "Eltwise11" top: "Convolution26"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm26" type: "BatchNorm" bottom: "Convolution26" top: "Convolution26"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale26" type: "Scale" bottom: "Convolution26" top: "Convolution26" 
+scale_param {bias_term: true}}
+
+layer {name: "ReLU26" type: "ReLU" bottom: "Convolution26" top: "Convolution26"}
+
+layer {name: "Convolution27" type: "Convolution" bottom: "Convolution26" top: "Convolution27"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 1 
+weight_filler {type: "gaussian" std: 0.059} 
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm27" type: "BatchNorm" bottom: "Convolution27" top: "Convolution27"
+param {lr_mult: 0 decay_mult: 0}}
+
+layer {name: "Scale27" type: "Scale" bottom: "Convolution27" top: "Convolution27"
+scale_param {bias_term: true}}
+
+layer {name: "global_12_1" type: "Pooling" bottom: "Convolution27" top: "global_12_1" 
+pooling_param {pool: AVE engine: CAFFE global_pooling: true}}
+
+layer {name: "conv12_1" type: "Convolution" bottom: "global_12_1" top: "conv12_1" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "globa12_2" type: "Pooling" bottom: "Convolution27" top: "global_12_2" 
+pooling_param {pool: MAX engine: CAFFE global_pooling: true}}
+
+layer {name: "conv12_2" type: "Convolution" bottom: "global_12_2" top: "conv12_2" 
+convolution_param {num_output: 16 kernel_size: 1 stride: 1}}
+
+layer {name: "Eltwise12" type: "Eltwise" bottom: "conv12_1" bottom: "conv12_2" top: "elt12" 
+eltwise_param {operation: SUM}}
+
+layer {name: "relu_conv12" type: "ReLU" bottom: "elt12" top: "elt12"}
+
+layer {name: "conv12_up" type: "Convolution" bottom: "elt12" top: "conv12_up" 
+convolution_param {num_output: 64 kernel_size: 1 stride: 1}}
+
+layer {name: "conv12_prob" type: "Sigmoid" bottom: "conv12_up" top: "conv12_up"}
+
+layer {name: "conv12_axpy" type: "Axpy" bottom: "conv12_up" bottom: "Convolution27" bottom: "Eltwise11" top: "Eltwise12"}
+
+## Dimensional Matching Function
+
+layer {name: "Convolution_eltwise4" type: "Convolution" bottom: "Eltwise4" top: "Convolution_eltwise4"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 4
+weight_filler {type: "gaussian" std: 0.059}
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm_Convolution_eltwise4" type: "BatchNorm" bottom: "Convolution_eltwise4" top: "Convolution_eltwise4"}
+
+layer {name: "Scale_Convolution_eltwise4" type: "Scale" bottom: "Convolution_eltwise4" top: "Convolution_eltwise4" 
+scale_param {bias_term: true}}
+
+layer {name: "Convolution_eltwise8" type: "Convolution" bottom: "Eltwise8" top: "Convolution_eltwise8"
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 0}
+convolution_param {num_output: 64 pad: 1 kernel_size: 3 stride: 2
+weight_filler {type: "gaussian" std: 0.059}
+bias_filler {type: "constant" value: 0}}}
+
+layer {name: "BatchNorm_Convolution_eltwise8" type: "BatchNorm" bottom: "Convolution_eltwise8" top: "Convolution_eltwise8"}
+
+layer {name: "Scale_Convolution_eltwise8" type: "Scale" bottom: "Convolution_eltwise8" top: "Convolution_eltwise8" 
+scale_param {bias_term: true}}
+
+## Feature Fusion Layer
+
+layer {name: "Eltwise13" type: "Eltwise" bottom: "Convolution_eltwise4" bottom: "Convolution_eltwise8" top: "elt13" 
+eltwise_param {operation: SUM}}
+
+layer {name: "Eltwise14" type: "Eltwise" bottom: "elt13" bottom: "Eltwise12" top: "elt14" 
+eltwise_param {operation: SUM}}
+
+layer {name: "ReLU27" type: "ReLU" bottom: "elt14" top: "elt14"}
+
+## Pooling Layer
+
+layer {name: "Pooling1" type: "Pooling" bottom: "elt14" top: "Pooling1"
+pooling_param {pool: AVE global_pooling: true}}
+
+
+layer {name: "Fully-Connected1" type: "InnerProduct" bottom: "Pooling1" top: "InnerProduct1" 
+param {lr_mult: 1 decay_mult: 1}
+param {lr_mult: 2 decay_mult: 1}
+inner_product_param {num_output: 2
+weight_filler {type: "gaussian"std: 0.01}
+bias_filler {type: "constant"value: 0}}}
+
+layer {name: "SoftmaxWithLoss1" type: "SoftmaxWithLoss" bottom: "InnerProduct1" bottom: "label" top: "SoftmaxWithLoss1"}
+
+## Record the Output of Softmax Layer
+
+layer {name: "prob" type: "Softmax" bottom: "InnerProduct1" top: "prob" include {phase: TEST }}
+
+layer {name: "Accuracy1" type: "Accuracy" bottom: "InnerProduct1" bottom: "label" top: "Accuracy1"
+include {phase: TEST}}
