@@ -1,4 +1,4 @@
-This code is for our paper "Change Detection from Synthetic Aperture Radar Images Based on Channel Weighting-Based Deep Cascade Network". 
+Code is for our paper "Change Detection from Synthetic Aperture Radar Images Based on Channel Weighting-Based Deep Cascade Network". 
 
 If you have any questions, please contact us. Email: [gaoyunhao128@163.com](mailto:gaoyunhao128@163.com) [gaofeng@ouc.edu.cn](mailto:gaofeng@ouc.edu.cn)
 
@@ -8,7 +8,7 @@ Before running this code, you should correctly install ubuntu system and CAFFE f
 
 (2) Opening the terminal and running this script to execute the training of DCNet: "sh train.sh"
 
-​    Then, training model named “***.caffemodel” can be obtained.
+    Then, training model named “***.caffemodel” can be obtained.
 
 (3) Running the following script to executes the testing of DCNet and record testing logs: "sh test.sh".
 
