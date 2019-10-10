@@ -7,7 +7,6 @@ Before running this code, you should correctly install ubuntu system and CAFFE f
 (1) The farmland dataset (LMDB format) is prepared on "https://share.weiyun.com/5M2gyVd".
 
 (2) Opening the terminal and running this script to execute the training of DCNet: "sh train.sh"
-
     Then, training model named “***.caffemodel” can be obtained.
 
 (3) Running the following script to executes the testing of DCNet and record testing logs: "sh test.sh".
