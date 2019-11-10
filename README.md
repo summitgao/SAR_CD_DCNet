@@ -1,14 +1,16 @@
-Code is for our paper "Change Detection from Synthetic Aperture Radar Images Based on Channel Weighting-Based Deep Cascade Network". 
+# SAR_CD_Ms_CapsNet
+Code for the paper"Change Detection in SAR Images Based on  Multiscale Capsule Network}"
 
-If you have any questions, please contact us. Email: [gaoyunhao128@163.com](mailto:gaoyunhao128@163.com) [gaofeng@ouc.edu.cn](mailto:gaofeng@ouc.edu.cn)
+If you have any queries, please do not hesitate to contact me (gaoyunhao128@163.com  gaofeng@ouc.edu.cn .More codes can be obtained from http://feng-gao.cn 
 
-Before running this code, you should correctly install ubuntu system and CAFFE framework. Refer to this guildeline "<http://caffe.berkeleyvision.org/installation.html>" After correctly installing ubuntu and caffe, you can run this code by the following procedures. 
+Run this code by the following procedures:
 
-(1) The farmland dataset (LMDB format) is prepared on "https://share.weiyun.com/5M2gyVd".
+1. Difference image can be obained by neighborhood ratio: "DI_generation.m". (Matlab 2012a)
+2. Opening the terminal and running this script: "python Ms_CapsNet.py". (Ubuntu-16.04.1  Keras-2.1.6)
 
-(2) Opening the terminal and running this script to execute the training of DCNet: "sh train.sh".
-    Then, training model named “***.caffemodel” can be obtained.
 
-(3) Running the following script to executes the testing of DCNet and record testing logs: "sh test.sh".
+Reference Code:
 
-(4) Final change map can be calculated by "Calculating_result.m".
+1.https://github.com/XifengGuo/CapsNet-Keras
+
+2.https://github.com/YushiChen/Conv-Caps-HSI-Classification
